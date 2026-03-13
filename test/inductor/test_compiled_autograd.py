@@ -1958,7 +1958,7 @@ main()
                 yield x.grad
 
         self.check_output_and_recompiles(
-            fn, count=[1, 3], compiler_fn=make_compiler_fn(fullgraph=False)
+            fn, count=[1, 2], compiler_fn=make_compiler_fn(fullgraph=False)
         )
 
     def test_custom_fn_compiled_fw_graph_break(self):
@@ -4616,7 +4616,7 @@ class CompiledAutograd1(torch.nn.Module):
         self.check_output_and_recompiles(
             fn,
             compiler_fn=make_compiler_fn(fullgraph=False),
-            count=[1, 2],
+            count=[1, 1],
         )
 
     # Case 1.5.1: Dense variable gradient layout contract
@@ -4982,7 +4982,7 @@ class CompiledAutograd1(torch.nn.Module):
         self.check_output_and_recompiles(
             fn,
             compiler_fn=make_compiler_fn(fullgraph=False),
-            count=[1, 3],
+            count=[1, 2],
         )
 
     def test_torch_function_mode(self):
