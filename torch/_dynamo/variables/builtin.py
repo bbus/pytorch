@@ -3045,6 +3045,20 @@ class BuiltinVariable(VariableTracker):
             return VariableTracker.build(tx, id(args[0].value))
         elif istype(args[0], variables.FunctoolsPartialVariable):
             return VariableTracker.build(tx, id(args[0].fake_value))
+        elif isinstance(
+            args[0],
+            (
+                ConstantVariable,
+                ConstDictVariable,
+                ListVariable,
+                TupleVariable,
+                SetVariable,
+                SymNodeVariable,
+            ),
+        ):
+            from .constant import FakeIdVariable
+
+            return FakeIdVariable(id(args[0]))
         else:
             unimplemented(
                 gb_type="id() with unsupported args",
@@ -3069,6 +3083,22 @@ class BuiltinVariable(VariableTracker):
                 *graph_break_hints.SUPPORTABLE,
             ],
         )
+
+    def call_is_(
+        self,
+        tx: "InstructionTranslator",
+        left: VariableTracker,
+        right: VariableTracker,
+    ) -> VariableTracker:
+        return ConstantVariable.create(left is right)
+
+    def call_is_not(
+        self,
+        tx: "InstructionTranslator",
+        left: VariableTracker,
+        right: VariableTracker,
+    ) -> VariableTracker:
+        return ConstantVariable.create(left is not right)
 
     def _comparison_with_tensor(
         self, tx: "InstructionTranslator", left: VariableTracker, right: VariableTracker
