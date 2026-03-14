@@ -445,6 +445,32 @@ class EnumVariable(VariableTracker):
     def get_python_hash(self) -> int:
         return hash(self.as_python_constant())
 
+    def call_method(
+        self,
+        tx: "InstructionTranslator",
+        name: str,
+        args: list[VariableTracker],
+        kwargs: dict[str, VariableTracker],
+    ) -> VariableTracker:
+        if name == "__contains__" and len(args) == 1 and args[0].is_python_constant():
+            assert not kwargs
+            search = args[0].as_python_constant()
+            try:
+                result = search in self.value  # type: ignore[operator]
+            except TypeError:
+                # Flag enums raise TypeError for wrong operand types
+                # (e.g., 'test' in SomeFlag.MEMBER). Graph break with
+                # skip_frame so the TypeError propagates in eager.
+                unimplemented(
+                    gb_type="enum __contains__ TypeError",
+                    context=f"{search!r} in {self.value!r}",
+                    explanation="Flag enum __contains__ raised TypeError for incompatible operand type",
+                    hints=[*graph_break_hints.SUPPORTABLE],
+                    skip_frame=True,
+                )
+            return ConstantVariable.create(result)
+        return super().call_method(tx, name, args, kwargs)
+
     def is_python_equal(self, other: object) -> bool:
         return (
             isinstance(other, VariableTracker)
